@@ -1,13 +1,10 @@
-const sqlite3 = require('sqlite3').verbose();
 const express = require('express')
 const bodyParser = require('body-parser')
-const envPort = require('./config.js')
 
 var app = express()
-var port = envPort.port || 3000;
+var port = process.env.port || 3000;
 var hbs = require('express-handlebars')
 
-let db = new sqlite3.Database('nba.db');
 
 app.engine('hbs', hbs({
     extname: 'hbs',
@@ -30,20 +27,6 @@ app.get('/', (req,res) => {
   res.render('index')
 })
 
-app.post('/', (req,res) => {
-  let sql = `SELECT * FROM Players WHERE PlayerID = ?`
-  let startTime = (new Date).getTime();
-
-  db.all (sql, [req.body.playerid], (err, rows) => 
-      {
-        res.render('index', {
-          result: rows,
-          time: ((new Date).getTime() - startTime)+'ms'
-        })
-      }
-  )
-
-})
 // -------------------------------------------------------
 
 app.listen(port, () => {

@@ -1,9 +1,9 @@
 <template>
   <div>
-  <div class="container" style="background-color:white">
+  <div class="container rounded" style="background-color:white">
     <p> This is a visual representation of the Block set associative least recently used cache replacement algorithm. Simply fill out the parameters below and watch it work! </p>
   </div>
-  <Cache :cacheData="cacheParams"/>
+  <Cache :cacheInfo="cacheParams" :cacheData="cacheData"/>
   </div>
 </template>
 
@@ -16,7 +16,19 @@ export default {
   },
   data: function() {
     return {
-      cacheParams: {},
+      cacheParams: {
+          blockSize: 4,
+      },
+      cacheData: [
+                {
+                    ages: [0, 0, 0, 0],
+                    data: [],
+                },
+                {
+                    ages: [0, 0, 0, 0],
+                    data: [],
+                }
+            ],
     }
   }
 }
