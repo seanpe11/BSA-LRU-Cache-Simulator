@@ -49,7 +49,8 @@
               <tr v-for='blockIndex of cacheParams.setSize' :key='setIndex+blockIndex'>
                 <td v-if="blockIndex == 1" :rowspan='cacheParams.setSize'>{{setIndex-1}}</td>
                 <td>{{blockIndex-1}}</td>
-                <td>{{cacheData[setIndex-1][blockIndex-1].data}}</td>
+                <td v-if="cacheData[setIndex-1][blockIndex-1].data==-1">Empty</td>
+                <td v-else>{{cacheData[setIndex-1][blockIndex-1].data}}</td>
                 <td>{{cacheData[setIndex-1][blockIndex-1].age}}</td>
               </tr>
             </template>
@@ -79,7 +80,7 @@
         </div>
         <div class="row" style="text-align:center;">
           <div class="col">
-            <a href='/'>Go Back</a>
+            <a href='/' style="color:white" class="btn btn-success">Go Back</a>
           </div>
         </div>
     </div>
@@ -91,10 +92,10 @@ export default {
   name: 'Main',
   data: function() {
     return {
-      dataArrayInput: "",
+      dataArrayInput: "1,7,5,0,2,1,5,6,5,2,2,0",
       dataArray: [],
       cacheParams: { // Get input for theses, bind these data to a text field, on click submit = perform BSA LRU
-          cacheSize: 4, // Number of Sets in the Cache
+          cacheSize: 2, // Number of Sets in the Cache
           setSize: 2, // Number of Blocks in a set
           memoryAccessTime: 10, // Time to access memory
           cacheAccessTime: 1, // Time to access cache
@@ -116,19 +117,9 @@ export default {
     this.initCacheData(this.cacheParams.cacheSize, this.cacheParams.setSize);
   },
   methods: {
-    again(){
-      this.run = false
-      this.cacheOutput = {
-          cacheHits: 0, // Integer count for number of hits
-          cacheMiss: 0, // Integer count for number of miss
-          missPenalty: 0, // float of miss penalty
-          avgAccessTime: 0, // float of average access time
-          totalAccessTime: 0 // float of total access time
-      }
-      this.initCacheData(this.cacheParams.cacheSize, this.cacheParams.setSize);
-    },
     bsa_lru(){
       this.dataArray = this.fromString
+      this.initCacheData(this.cacheParams.cacheSize, this.cacheParams.setSize);
       this.startCaching();
       this.postCacheComputations();
       this.currIndex = this.history.length-1;
