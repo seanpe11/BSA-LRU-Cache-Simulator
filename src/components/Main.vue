@@ -1,32 +1,87 @@
 <template>
   <div>
-  <div class="container rounded" style="background-color:white">
+  <div v-show="!run" class="container rounded p-5" style="background-color:white">
     <p> This is a visual representation of the Block set associative least recently used cache replacement algorithm. Simply fill out the parameters below and watch it work! </p>
-  </div>
-  <div class="container rounded" style="background-color:white">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-            <tr>
-                <th>Set</th>
-                <th>Block</th>
-                <th>Data</th>
-                <th>Age</th>
-            </tr>
-        </thead>
-        <tbody>
-          <!-- FOR EACH SET -->
-          <template v-for="setIndex of cacheParams.blockSize">
-            <tr v-for='blockIndex of cacheParams.setSize' :key='setIndex+blockIndex'>
-              <td>{{setIndex-1}}</td>
-              <td>{{blockIndex-1}}</td>
-              <td>{{cacheData[setIndex-1][blockIndex-1].data}}</td>
-              <td>{{cacheData[setIndex-1][blockIndex-1].age}}</td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
+    <div class="row" style="text-align: right;">
+        <div class="col">
+            <div class="form-group">
+              <label class='mr-2'>Number of Sets in the Cache:</label>
+              <input type="number" v-model.number='cacheParams.cacheSize'/>
+            </div>
+            <div class="form-group">
+              <label class='mr-2'>Number of Blocks per Set:</label>
+              <input type="number" v-model.number='cacheParams.setSize'/>
+            </div>
+        </div>
+        <div class="col" >
+            <div class="form-group"><label class='mr-2'>Memory Access Time:</label><input type="number" v-model.number='cacheParams.memoryAccessTime'/></div>
+            <div class="form-group"><label class='mr-2'>Cache Access Time:</label><input type="number" v-model.number='cacheParams.cacheAccessTime'/></div>
+        </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <div class="form-group">
+        <label class='mr-2'>Main memory input (in blocks, comma separated):</label>
+        <textarea v-model='dataArrayInput' style="width:80%; height: 50px;"></textarea>
+        </div>
       </div>
+    </div>
+    <div class="row" style="text-align:center;">
+      <div class="col">
+        <button v-on:click="bsa_lru" class="btn btn-success">Start</button>
+      </div>
+    </div>
+  </div>
+  <div v-show="run" class="container rounded p-5 mt-5" style="background-color:white">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+              <tr>
+                  <th>Set</th>
+                  <th>Block</th>
+                  <th>Data</th>
+                  <th>Age</th>
+              </tr>
+          </thead>
+          <tbody>
+            <!-- FOR EACH SET -->
+            <template v-for="setIndex of cacheParams.cacheSize">
+              <tr v-for='blockIndex of cacheParams.setSize' :key='setIndex+blockIndex'>
+                <td v-if="blockIndex == 1" :rowspan='cacheParams.setSize'>{{setIndex-1}}</td>
+                <td>{{blockIndex-1}}</td>
+                <td>{{cacheData[setIndex-1][blockIndex-1].data}}</td>
+                <td>{{cacheData[setIndex-1][blockIndex-1].age}}</td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+      <div class="row">
+            <div class="col">
+              <!--
+                <p style="text-align: left;">
+                  Showing step
+                    <button v-show="currIndex > 0" v-on:click='stepDown' class="btn">-</button>
+                    <button disabled v-show="currIndex == 0" class="btn">-</button>
+                    <input min=0 :max='history.length-1' type="text" size="3" v-model='currIndex'/>
+                    <button v-show="currIndex < history.length-1" v-on:click='stepUp' class="btn">+</button>
+                    <button disabled v-show="currIndex == history.length-1" class="btn">+</button>
+                    of {{history.length-1}}
+                  </p>
+                -->
+            </div>
+            <div class="col">
+                <p style="text-align: right;">Cache Hit: {{cacheOutput.cacheHits}}</p>
+                <p style="text-align: right;">Cache Miss: {{cacheOutput.cacheMiss}}</p>
+                <p style="text-align: right;">Average Access Time: {{cacheOutput.avgAccessTime}} timeunits</p>
+                <p style="text-align: right;">Total Access Time: {{cacheOutput.totalAccessTime}} timeunits</p>
+            </div>
+        </div>
+        <div class="row" style="text-align:center;">
+          <div class="col">
+            <a href='/'>Go Back</a>
+          </div>
+        </div>
     </div>
   </div>
 </template>
@@ -36,18 +91,15 @@ export default {
   name: 'Main',
   data: function() {
     return {
+      dataArrayInput: "",
+      dataArray: [],
       cacheParams: { // Get input for theses, bind these data to a text field, on click submit = perform BSA LRU
-          blockSize: 2, // Number of Sets in the Block
+          cacheSize: 4, // Number of Sets in the Cache
           setSize: 2, // Number of Blocks in a set
           memoryAccessTime: 10, // Time to access memory
           cacheAccessTime: 1, // Time to access cache
-          dataArray: [1,7,5,0,2,1,5,6,5,2,2,0] // Data array
       },
-      cacheData: [
-        // depends on blocksize and setsize
-        [],
-        []
-      ],
+      cacheData: [],
       cacheOutput: {
           cacheHits: 0, // Integer count for number of hits
           cacheMiss: 0, // Integer count for number of miss
@@ -55,24 +107,45 @@ export default {
           avgAccessTime: 0, // float of average access time
           totalAccessTime: 0 // float of total access time
       },
+      currIndex: 0,
+      history: [],
+      run: false,
     }
   },
   created: function (){
-    this.initCacheData(this.cacheParams.blockSize, this.cacheParams.setSize);
-    this.startCaching();
-    this.postCacheComputations();
+    this.initCacheData(this.cacheParams.cacheSize, this.cacheParams.setSize);
   },
   methods: {
-    initCacheData(blockSize, setSize){
-      var i, j;
+    again(){
+      this.run = false
+      this.cacheOutput = {
+          cacheHits: 0, // Integer count for number of hits
+          cacheMiss: 0, // Integer count for number of miss
+          missPenalty: 0, // float of miss penalty
+          avgAccessTime: 0, // float of average access time
+          totalAccessTime: 0 // float of total access time
+      }
+      this.initCacheData(this.cacheParams.cacheSize, this.cacheParams.setSize);
+    },
+    bsa_lru(){
+      this.dataArray = this.fromString
+      this.startCaching();
+      this.postCacheComputations();
+      this.currIndex = this.history.length-1;
+      this.run = true
+    },
+    initCacheData(cacheSize, setSize){
+      var set, block;
       function dataObject (data, age) {
           this.data = data;
           this.age = age;
       }
-      for(i = 0; i < blockSize; i++) {
-        for (j = 0; j < setSize; j++) {
-          this.cacheData[i][j] = new dataObject(-1,0)
+      for(set = 0; set < cacheSize; set++) {
+        let arr = []
+        for (block = 0; block < setSize; block++) {
+          arr.push(new dataObject(-1, 0))
         }
+        this.cacheData.push(arr)
       }
       console.log(this.cacheData)
     },
@@ -82,13 +155,13 @@ export default {
       //     this.data = data;
       //     this.age = age;
       // }
-      var size = new Array(this.cacheParams.blockSize).fill(0);
+      var size = new Array(this.cacheParams.cacheSize).fill(0);
       // console.log('size array:' + size)
-      for (x of this.cacheParams.dataArray) {
+      for (x of this.dataArray) {
         console.log('CURR: '+x)
         
         // Modulo to find set
-        var destSet = x % this.cacheParams.blockSize;
+        var destSet = x % this.cacheParams.cacheSize;
 
         // Increase Age of all data in destSet
         this.increaseAge(destSet);
@@ -132,12 +205,11 @@ export default {
           }
           this.cacheOutput.cacheMiss++
         }
-
         console.log(this.cacheData[0][0].data + "," + this.cacheData[0][0].age + " "  + this.cacheData[0][1].data + "," + this.cacheData[0][1].age);
         console.log(this.cacheData[1][0].data + "," + this.cacheData[1][0].age + " "  + this.cacheData[1][1].data + "," + this.cacheData[1][1].age);
       }
-
     console.log(this.cacheData)
+    
 
     },
     increaseAge: function (set) {
@@ -153,13 +225,23 @@ export default {
       }
     },
     postCacheComputations: function () {
-      this.cacheOutput.missPenalty = this.cacheParams.cacheAccessTime*2 + (this.cacheParams.blockSize*this.cacheParams.memoryAccessTime);
-      this.cacheOutput.avgAccessTime = ((this.cacheOutput.cacheHits / this.cacheParams.dataArray.length)*this.cacheParams.cacheAccessTime) + ((this.cacheOutput.cacheMiss / this.cacheParams.dataArray.length)*this.cacheOutput.missPenalty);
-      this.cacheOutput.totalAccessTime = (this.cacheOutput.cacheHits*this.cacheParams.blockSize*this.cacheParams.cacheAccessTime) + (this.cacheOutput.cacheMiss*this.cacheParams.blockSize*(this.cacheParams.memoryAccessTime+this.cacheParams.cacheAccessTime)) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheAccessTime);
+      this.cacheOutput.missPenalty = this.cacheParams.cacheAccessTime*2 + (this.cacheParams.cacheSize*this.cacheParams.memoryAccessTime);
+      this.cacheOutput.avgAccessTime = ((this.cacheOutput.cacheHits / this.dataArray.length)*this.cacheParams.cacheAccessTime) + ((this.cacheOutput.cacheMiss / this.dataArray.length)*this.cacheOutput.missPenalty);
+      this.cacheOutput.totalAccessTime = (this.cacheOutput.cacheHits*this.cacheParams.cacheSize*this.cacheParams.cacheAccessTime) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheSize*(this.cacheParams.memoryAccessTime+this.cacheParams.cacheAccessTime)) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheAccessTime);
     
       console.log(this.cacheOutput)
     }
-  }
+  },
+  computed: {
+    fromString(){
+      let array = this.dataArrayInput.split(',');
+      let temp = Array();
+      let i=0;
+      for (i=0;i<array.length;i++)
+        temp.push(parseInt(array[i], 10));
+      return temp
+    }
+  },
 }
 </script>
 
