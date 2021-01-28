@@ -1,2 +1,24 @@
-# BSA-LRU-Cache-Simulator
-A cache simulator that shows a visual representation of the Block Set Associative Least Recently Used replacement algorithm for cache memory.
+# bsa-lru
+
+## Project setup
+```
+npm install
+```
+
+### Compiles and hot-reloads for development
+```
+npm run serve
+```
+
+### Compiles and minifies for production
+```
+npm run build
+```
+
+### Lints and fixes files
+```
+npm run lint
+```
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
