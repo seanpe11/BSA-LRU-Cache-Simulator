@@ -83,6 +83,7 @@
               <h3 class='mb-3'>Cache Output</h3>
               <p>Cache Hit: {{cacheOutput.cacheHits}}</p>
               <p>Cache Miss: {{cacheOutput.cacheMiss}}</p>
+              <p>Miss Penalty: {{cacheOutput.missPenalty}}</p>
               <p>Average Access Time: {{cacheOutput.avgAccessTime}} timeunits</p>
               <p>Total Access Time: {{cacheOutput.totalAccessTime}} timeunits</p>
             </div>
