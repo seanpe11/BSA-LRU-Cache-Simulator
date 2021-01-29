@@ -57,29 +57,41 @@
           </tbody>
         </table>
       </div>
-      <div class="row">
-            <div class="col">
-              <p style="text-align: left;">
-                Showing step
-                  <button v-show="currIndex > 0" v-on:click='stepDown' class="btn">-</button>
-                  <button disabled v-show="currIndex == 0" class="btn">-</button>
-                  <input min=0 :max='history.length-1' type="text" size="3" v-model='currIndex'/>
-                  <button v-show="currIndex < history.length-1" v-on:click='stepUp' class="btn">+</button>
-                  <button disabled v-show="currIndex == history.length-1" class="btn">+</button>
-                  of {{history.length-1}}
-                </p>
+      <div class="row mb-4">
+        <div class="col">
+          <p style="text-align: right;">
+            Showing step
+              <button v-show="currIndex > 0" v-on:click='stepDown' class="btn">-</button>
+              <button disabled v-show="currIndex == 0" class="btn">-</button>
+              <input min=0 :max='history.length-1' type="text" size="3" v-model='currIndex'/>
+              <button v-show="currIndex < history.length-1" v-on:click='stepUp' class="btn">+</button>
+              <button disabled v-show="currIndex == history.length-1" class="btn">+</button>
+              of {{history.length-1}}
+            </p>
+        </div>
+      </div>
+      <div class="row mb-4">
+            <div class="col-6 text-left">
+              <h3 class='mb-3'>Cache Input Parameters</h3>
+              <p>Number of Sets: {{cacheParams.cacheSize}}</p>
+              <p>Number of Blocks per Set: {{cacheParams.setSize}}</p>
+              <p>Memory Access Time: {{cacheParams.memoryAccessTime}} timeunits</p>
+              <p>Cache Access Time: {{cacheParams.cacheAccessTime}} timeunits</p>
+              <p>Input Array {{dataArrayInput}}</p>
             </div>
-            <div class="col">
-                <p style="text-align: right;">Cache Hit: {{cacheOutput.cacheHits}}</p>
-                <p style="text-align: right;">Cache Miss: {{cacheOutput.cacheMiss}}</p>
-                <p style="text-align: right;">Miss Penalty: {{cacheOutput.missPenalty}} timeunits</p>
-                <p style="text-align: right;">Average Access Time: {{cacheOutput.avgAccessTime}} timeunits</p>
-                <p style="text-align: right;">Total Access Time: {{cacheOutput.totalAccessTime}} timeunits</p>
+            <div class="col-6 text-right">
+              <h3 class='mb-3'>Cache Output</h3>
+              <p>Cache Hit: {{cacheOutput.cacheHits}}</p>
+              <p>Cache Miss: {{cacheOutput.cacheMiss}}</p>
+              <p>Average Access Time: {{cacheOutput.avgAccessTime}} timeunits</p>
+              <p>Total Access Time: {{cacheOutput.totalAccessTime}} timeunits</p>
             </div>
         </div>
-        <div class="row" style="text-align:center;">
-          <div class="col">
+        <div class="row d-print-none" style="text-align:center;">
+          <div class="col d-flex justify-content-center ">
             <a href='/' style="color:white" class="btn btn-success">Go Back</a>
+            <a v-on:click='saveFile()' style="color:white" class="btn btn-success ml-3">Download Output as Text File</a>
+            <a onclick="window.print()" style="color:white" class="btn btn-success ml-3">Print Output as PDF File</a>
           </div>
         </div>
     </div>
@@ -87,6 +99,8 @@
 </template>
 
 <script>
+import {saveAs} from 'file-saver';
+
 export default {
   name: 'Main',
   data: function() {
@@ -247,6 +261,44 @@ export default {
           histCache.push(histSet)
       }
       this.history.push(histCache)
+    },
+    saveFile: function() {
+      var outputString = "";
+
+      // INPUT PARAMETERS
+      outputString += "INPUT PARAMETERS:\n"
+      outputString += JSON.stringify(this.cacheParams) + "\nInput Array: " + this.dataArrayInput + "\n\n";
+
+      outputString += "Final Snapshot\n"
+
+      outputString += "Set\tBlock\tData\tAge\n";
+      var i, j;
+      console.log(this.cacheData[0][0].data)
+      for (i = 0; i < this.cacheParams.cacheSize; i++){
+        for (j = 0; j < this.cacheParams.setSize; j++){
+          outputString += `${i}\t${j}\t${this.cacheData[i][j].data}\t${this.cacheData[i][j].age}\n`;
+        }
+      }
+      
+      outputString += "\nPOST CACHE STATISTICS:\n"
+      outputString += JSON.stringify(this.cacheOutput);
+      outputString += "\n\n"
+
+      let k
+      for (k=0; k < this.history.length; k++){
+        outputString += " \nSnapshot " + k + "\n"
+        outputString += "Set\tBlock\tData\tAge\n"; 
+        for (i = 0; i < this.cacheParams.cacheSize; i++){
+          for (j = 0; j < this.cacheParams.setSize; j++){
+            outputString += `${i}\t${j}\t${this.history[k][i][j].data}\t${this.history[k][i][j].age}\n`;
+          }
+        }
+      }
+
+      var blob = new Blob([outputString], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "output.txt");
+      console.log(outputString)
+      console.log('Downloaded!')
     }
   },
   computed: {
