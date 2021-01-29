@@ -57,9 +57,8 @@
           </tbody>
         </table>
       </div>
-      <div class="row">
-            <div class="col">
-              <!--
+      <div class="row mb-4">
+            <!-- <div class="col">
                 <p style="text-align: left;">
                   Showing step
                     <button v-show="currIndex > 0" v-on:click='stepDown' class="btn">-</button>
@@ -69,18 +68,28 @@
                     <button disabled v-show="currIndex == history.length-1" class="btn">+</button>
                     of {{history.length-1}}
                   </p>
-                -->
+            </div> -->
+            <div class="col-6 text-left">
+              <h3 class='mb-3'>Cache Input Parameters</h3>
+              <p>Number of Sets: {{cacheParams.cacheSize}}</p>
+              <p>Number of Blocks per Set: {{cacheParams.setSize}}</p>
+              <p>Memory Access Time: {{cacheParams.memoryAccessTime}} timeunits</p>
+              <p>Cache Access Time: {{cacheParams.cacheAccessTime}} timeunits</p>
+              <p>Input Array {{dataArrayInput}}</p>
             </div>
-            <div class="col">
-                <p style="text-align: right;">Cache Hit: {{cacheOutput.cacheHits}}</p>
-                <p style="text-align: right;">Cache Miss: {{cacheOutput.cacheMiss}}</p>
-                <p style="text-align: right;">Average Access Time: {{cacheOutput.avgAccessTime}} timeunits</p>
-                <p style="text-align: right;">Total Access Time: {{cacheOutput.totalAccessTime}} timeunits</p>
+            <div class="col-6 text-right">
+              <h3 class='mb-3'>Cache Output</h3>
+              <p>Cache Hit: {{cacheOutput.cacheHits}}</p>
+              <p>Cache Miss: {{cacheOutput.cacheMiss}}</p>
+              <p>Average Access Time: {{cacheOutput.avgAccessTime}} timeunits</p>
+              <p>Total Access Time: {{cacheOutput.totalAccessTime}} timeunits</p>
             </div>
         </div>
-        <div class="row" style="text-align:center;">
-          <div class="col">
+        <div class="row d-print-none" style="text-align:center;">
+          <div class="col d-flex justify-content-center ">
             <a href='/' style="color:white" class="btn btn-success">Go Back</a>
+            <a v-on:click='saveFile()' style="color:white" class="btn btn-success ml-3">Download Output as Text File</a>
+            <a onclick="window.print()" style="color:white" class="btn btn-success ml-3">Print Output as PDF File</a>
           </div>
         </div>
     </div>
@@ -88,6 +97,8 @@
 </template>
 
 <script>
+import {saveAs} from 'file-saver';
+
 export default {
   name: 'Main',
   data: function() {
@@ -221,6 +232,29 @@ export default {
       this.cacheOutput.totalAccessTime = (this.cacheOutput.cacheHits*this.cacheParams.cacheSize*this.cacheParams.cacheAccessTime) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheSize*(this.cacheParams.memoryAccessTime+this.cacheParams.cacheAccessTime)) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheAccessTime);
     
       console.log(this.cacheOutput)
+    },
+    saveFile: function() {
+      var outputString = "";
+
+      // INPUT PARAMETERS
+      outputString += "INPUT PARAMETERS:\n"
+      outputString += JSON.stringify(this.cacheParams) + "\nInput Array: " + this.dataArrayInput + "\n\n";
+
+      outputString += "Set\tBlock\tData\tAge\n";
+      var i, j;
+      console.log(this.cacheData[0][0].data)
+      for (i = 0; i < this.cacheParams.cacheSize; i++){
+        for (j = 0; j < this.cacheParams.setSize; j++){
+          outputString += `${i}\t${j}\t${this.cacheData[i][j].data}\t${this.cacheData[i][j].age}\n`;
+        }
+      }
+      
+      outputString += "\nPOST CACHE STATISTICS:\n"
+      outputString += JSON.stringify(this.cacheOutput);
+      var blob = new Blob([outputString], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "output.txt");
+      console.log(outputString)
+      console.log('Downloaded!')
     }
   },
   computed: {
