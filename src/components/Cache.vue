@@ -51,6 +51,16 @@ export default {
     methods: {
         bsa_lru: function(firstStep) {
             this.history.push(this.cacheData)
+            var histCache = []
+            let histSet = []
+            let block, set
+            for (set of this.cacheData){
+                histSet = []
+                for (block of set)
+                    histSet.push({data: block.data, age: block.age})
+                histCache.push(histSet)
+            }
+            console.log(histCache)
         }
     }, 
 }

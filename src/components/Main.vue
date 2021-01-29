@@ -59,21 +59,20 @@
       </div>
       <div class="row">
             <div class="col">
-              <!--
-                <p style="text-align: left;">
-                  Showing step
-                    <button v-show="currIndex > 0" v-on:click='stepDown' class="btn">-</button>
-                    <button disabled v-show="currIndex == 0" class="btn">-</button>
-                    <input min=0 :max='history.length-1' type="text" size="3" v-model='currIndex'/>
-                    <button v-show="currIndex < history.length-1" v-on:click='stepUp' class="btn">+</button>
-                    <button disabled v-show="currIndex == history.length-1" class="btn">+</button>
-                    of {{history.length-1}}
-                  </p>
-                -->
+              <p style="text-align: left;">
+                Showing step
+                  <button v-show="currIndex > 0" v-on:click='stepDown' class="btn">-</button>
+                  <button disabled v-show="currIndex == 0" class="btn">-</button>
+                  <input min=0 :max='history.length-1' type="text" size="3" v-model='currIndex'/>
+                  <button v-show="currIndex < history.length-1" v-on:click='stepUp' class="btn">+</button>
+                  <button disabled v-show="currIndex == history.length-1" class="btn">+</button>
+                  of {{history.length-1}}
+                </p>
             </div>
             <div class="col">
                 <p style="text-align: right;">Cache Hit: {{cacheOutput.cacheHits}}</p>
                 <p style="text-align: right;">Cache Miss: {{cacheOutput.cacheMiss}}</p>
+                <p style="text-align: right;">Miss Penalty: {{cacheOutput.missPenalty}} timeunits</p>
                 <p style="text-align: right;">Average Access Time: {{cacheOutput.avgAccessTime}} timeunits</p>
                 <p style="text-align: right;">Total Access Time: {{cacheOutput.totalAccessTime}} timeunits</p>
             </div>
@@ -117,6 +116,17 @@ export default {
     this.initCacheData(this.cacheParams.cacheSize, this.cacheParams.setSize);
   },
   methods: {
+    stepUp() {
+      this.currIndex++;
+      this.update();
+    },
+    stepDown(){
+      this.currIndex--;
+      this.update()
+    },
+    update() {
+      this.cacheData = this.history[this.currIndex]
+    },
     bsa_lru(){
       this.dataArray = this.fromString
       this.initCacheData(this.cacheParams.cacheSize, this.cacheParams.setSize);
@@ -127,6 +137,7 @@ export default {
     },
     initCacheData(cacheSize, setSize){
       var set, block;
+      this.cacheData = []
       function dataObject (data, age) {
           this.data = data;
           this.age = age;
@@ -141,6 +152,7 @@ export default {
       console.log(this.cacheData)
     },
     startCaching: function () {
+      this.addToHistory()
       var x;
       // function dataObject (data, age) {
       //     this.data = data;
@@ -198,10 +210,12 @@ export default {
         }
         console.log(this.cacheData[0][0].data + "," + this.cacheData[0][0].age + " "  + this.cacheData[0][1].data + "," + this.cacheData[0][1].age);
         console.log(this.cacheData[1][0].data + "," + this.cacheData[1][0].age + " "  + this.cacheData[1][1].data + "," + this.cacheData[1][1].age);
+        
+        this.addToHistory()
+        
       }
-    console.log(this.cacheData)
-    
-
+      console.log(this.cacheData)
+      
     },
     increaseAge: function (set) {
       var x;
@@ -221,6 +235,18 @@ export default {
       this.cacheOutput.totalAccessTime = (this.cacheOutput.cacheHits*this.cacheParams.cacheSize*this.cacheParams.cacheAccessTime) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheSize*(this.cacheParams.memoryAccessTime+this.cacheParams.cacheAccessTime)) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheAccessTime);
     
       console.log(this.cacheOutput)
+    },
+    addToHistory: function() {
+      var histCache = []
+      let histSet = []
+      let block, set
+      for (set of this.cacheData){
+          histSet = []
+          for (block of set)
+              histSet.push({data: block.data, age: block.age})
+          histCache.push(histSet)
+      }
+      this.history.push(histCache)
     }
   },
   computed: {
