@@ -12,6 +12,10 @@
               <label class='mr-2'>Number of Blocks per Set:</label>
               <input type="number" v-model.number='cacheParams.setSize'/>
             </div>
+            <div class="form-group">
+              <label class='mr-2'>Number of Words per Block:</label>
+              <input type="number" v-model.number='cacheParams.blockSize'/>
+            </div>
         </div>
         <div class="col" >
             <div class="form-group"><label class='mr-2'>Memory Access Time:</label><input type="number" v-model.number='cacheParams.memoryAccessTime'/></div>
@@ -33,6 +37,7 @@
     </div>
   </div>
   <div v-show="run" class="container rounded p-5 mt-5" style="background-color:white">
+      <h3 class='mb-3'>Cache Snapshot</h3>
       <div class="table-responsive">
         <table class="table">
           <thead>
@@ -75,9 +80,10 @@
               <h3 class='mb-3'>Cache Input Parameters</h3>
               <p>Number of Sets: {{cacheParams.cacheSize}}</p>
               <p>Number of Blocks per Set: {{cacheParams.setSize}}</p>
+              <p>Number of Words per Block: {{cacheParams.blockSize}}</p>
               <p>Memory Access Time: {{cacheParams.memoryAccessTime}} timeunits</p>
               <p>Cache Access Time: {{cacheParams.cacheAccessTime}} timeunits</p>
-              <p>Input Array {{dataArrayInput}}</p>
+              <p>Input Array: {{dataArrayInput}}</p>
             </div>
             <div class="col-6 text-right">
               <h3 class='mb-3'>Cache Output</h3>
@@ -113,6 +119,7 @@ export default {
           setSize: 2, // Number of Blocks in a set
           memoryAccessTime: 10, // Time to access memory
           cacheAccessTime: 1, // Time to access cache
+          blockSize: 2
       },
       cacheData: [],
       cacheOutput: {
@@ -245,9 +252,9 @@ export default {
       }
     },
     postCacheComputations: function () {
-      this.cacheOutput.missPenalty = this.cacheParams.cacheAccessTime*2 + (this.cacheParams.cacheSize*this.cacheParams.memoryAccessTime);
+      this.cacheOutput.missPenalty = this.cacheParams.cacheAccessTime*2 + (this.cacheParams.blockSize*this.cacheParams.memoryAccessTime);
       this.cacheOutput.avgAccessTime = ((this.cacheOutput.cacheHits / this.dataArray.length)*this.cacheParams.cacheAccessTime) + ((this.cacheOutput.cacheMiss / this.dataArray.length)*this.cacheOutput.missPenalty);
-      this.cacheOutput.totalAccessTime = (this.cacheOutput.cacheHits*this.cacheParams.cacheSize*this.cacheParams.cacheAccessTime) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheSize*(this.cacheParams.memoryAccessTime+this.cacheParams.cacheAccessTime)) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheAccessTime);
+      this.cacheOutput.totalAccessTime = (this.cacheOutput.cacheHits*this.cacheParams.blockSize*this.cacheParams.cacheAccessTime) + (this.cacheOutput.cacheMiss*this.cacheParams.blockSize*(this.cacheParams.memoryAccessTime+this.cacheParams.cacheAccessTime)) + (this.cacheOutput.cacheMiss*this.cacheParams.cacheAccessTime);
     
       console.log(this.cacheOutput)
     },
