@@ -54,7 +54,7 @@
               <tr v-for='blockIndex of cacheParams.setSize' :key='setIndex+blockIndex'>
                 <td v-if="blockIndex == 1" :rowspan='cacheParams.setSize'>{{setIndex-1}}</td>
                 <td>{{blockIndex-1}}</td>
-                <td v-if="cacheData[setIndex-1][blockIndex-1].data==-1">Empty</td>
+                <td v-if="cacheData[setIndex-1][blockIndex-1].data=='E'">Empty</td>
                 <td v-else>{{cacheData[setIndex-1][blockIndex-1].data}}</td>
                 <td>{{cacheData[setIndex-1][blockIndex-1].age}}</td>
               </tr>
@@ -167,7 +167,7 @@ export default {
       for(set = 0; set < cacheSize; set++) {
         let arr = []
         for (block = 0; block < setSize; block++) {
-          arr.push(new dataObject(-1, 0))
+          arr.push(new dataObject("E", 0))
         }
         this.cacheData.push(arr)
       }
